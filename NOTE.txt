@@ -1,0 +1,172 @@
+Ý tưởng: TCP 
+
+
+TCP DataStream
+
+1. TỔNG HIỆU TÍCH
+- Ý tưởng: do độ khó được ghi tính các số nguyên với nhau nên ta chuyển sang dạng số nguyên lớn (BigInteger) để tính toán
+- Lưu ý:
+Tổng - .add()
+Hiệu - .subtract()
+Tích - .multiply()
+Thương - .divide()
+So sánh - .equals()
+Giao thức luông dùng: writeUTF() hoặc readUTF() để truyền k sử dụng writeInt hay writeLong
+
+2. MÃ HÓA CAESAR
+- Mô tả bài toán: Bài toán mã hóa các ký tự trong chuỗi bị dịch đi (k) đoạn tức k = 3 thì A -> D. 
+- Ý tưởng: Giải mã: 
+1. Kiểm tra các ký tự có phải là số hay không
+(Character.isLetter(word))
+2. Xác định ký tự đó là chữ hoa hay chữ thường nếu là chữ hoa thì lấy 'A' làm mốc và 'a' nếu là chữ thường
+(char base = Character.isUpperCase(word) ? 'A' : 'a';)
+3. Công thức giải mã Caesar
+word = (char) (((word - base - k + 26) % 26) + base);
+4. Tạo một chuỗi trống để chứa các ký tự sau khi được giải mã và nối chúng lại
+(res.append(word))
+5. Gửi lên server dưới dạng String
+(out.WriteUTF(res.toString());)
+
+
+FORMAT:
+
+Socket socket = new Socket("localhost",220x);
+DataInputStream in = new DataInputStream(socket.getInputStream());
+DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+
+String code = "B22DCCN256;maDeBai";
+out.writeUTF(code);
+out.flush();
+
+String str = in.readUTF();
+int number = in.readInt();
+//
+**
+//
+
+out.writeUTF(res);
+out.flush();
+
+in.close();
+out.close();
+socket.close();
+
+
+
+--------------------------------------------------------------
+
+TCP ByteStream
+
+1. TỔNG CÁC SỐ
+- Ý tưởng: Tách các số từ chuỗi bằng dấu "|" đề bài yêu cầu và lưu vào một mảng String chứa các số sau đó thực hiện tính tổng (do các số trong mảng đang ở dạng String ta chuyển về kiểu số nguyên để cộng) và gửi lên server dưới định dạng String
+- Câu lệnh:
+long Tong = 0;
+String[] parts = str.trim().split("\\|");
+for(String part : parts){
+     Tong += Long.parseLong(part);
+}
+String res = String.valueOf(Tong);
+out.write(res.getBytes());
+
+
+FORMAT
+
+Socket socket = new Socket("localhost", 220x);
+String code = "B22DCCN256;maDeBai";
+InputStream in = socket.getInputStream();
+OutputStream out = socket.getOutputStream();
+out.write(code.getBytes());
+out.flush();
+
+byte[] buf = new byte[1024];
+String readBytes = in.read(buf);
+String str = new String(buf,0,readBytes);
+
+//
+*
+//
+
+out.write(res.getBytes());
+out.flush();
+
+in.close();
+out.close();
+socket.close();
+
+--------------------------------------------------------------
+TCP CharacterStream
+
+1. LOẠI BỎ NGUYÊN ÂM 
+- Ý tưởng: (thay đổi các nguyên âm a e i o u thành "")
+- Câu lệnh: 
+res = str.replaceAll("[aeiou]","");
+
+2. TÊN MIỀN ĐÚNG
+- Ý tưởng: Tách chuỗi thành các cụm riêng biệt lưu vào một danh sách trống sau đó chạy vòng lặp for để kiểm tra từng cụm từ có chứa ".edu" ở cuối. Sau khi có các cụm từ chứa ".edu" ta ghép lại thành một chuỗi và gửi lên server.
+- Câu lệnh:
+String[] domains = str.split(",\\s*");
+List<String> eduDomains = new ArrayList<>();
+for(String domain : domains){
+     if(domain.endsWith(".edu")){
+           eduDomains.add(domain);
+     }
+}
+String res = String.join(",",eduDomains);
+
+3. ĐẢO NGƯỢC CHUỖI
+- Ý tưởng: Sử dụng StringBuilder 
+Có thể sử dụng trong các dạng như: 
+str = "Hello "
+Đảo ngược chuỗi: StringBuilder(str).reverse();
+Nối chuỗi: StringBuilder(str).append("World");
+Chèn vào giữa chuỗi: StringBuilder(str).insert(1,"123"); --> H123ello
+Xóa ký tự: StringBuilder(str).delete(str.length()-2, str.length()); --> Hell (1 dấu cách và chữ o)
+Thay thế: StringBuilder(str).replace(1,4,"Hi"); --> HHio (thay index từ 1-3 bằng "Hi")
+Thay đổi ký tự tại vị trí cụ thể: StringBuilder(str).setCharAt(3,'K'); --> HelKo 
+- Lưu ý:
+Khi gửi qua mạng bằng writeUTF(String) thì bắt buộc phải chuyển nó về String bằng hàm toSring() 
+
+
+FORMAT
+
+Socket socket = new Socket("localhost",220x);
+String code = "B22DCCN256;maDeBai";
+BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+BufferedWriter out = new BufferedReader(new OutputStreamWriter(socket.getOutputStream()));
+
+out.write(code);
+out.newLine();
+out.flush();
+
+String str = in.readLine();
+
+out.write(res);
+out.newLine();
+out.flush();
+
+in.close();
+out.close();
+socket.close();
+--------------------------------------------------------------
+UDP
+DatagramSocket socket = new DatagramSocket();
+InetAddress IP = InetAddress.getByName("203.162.10.109");
+int Port = 220x;
+
+String code = ";B22DCCN256;maDeBai";
+DatagramPacket dpGui = new DatagramPacket(code.getBytes(),code.length(),IP,Port);
+socket.send(dpGui);
+
+byte[] buf = new byte[1024];
+DatagramPacket dpNhan = new DatagramPacket(buf,buf.length);
+socket.receive(dpNhan);
+
+String str = new String(dpNhan.getData());
+
+
+String res = str;
+DatagramPacket dpGui2 = new DatagramPacket (res.getBytes(),res.length(),IP,Port);
+socket.send(dpGui2);
+
+
+
